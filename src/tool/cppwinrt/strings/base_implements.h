@@ -114,7 +114,7 @@ namespace winrt::impl
     {
         operator producer_ref<I> const() const noexcept
         {
-            return { (produce<D, typename default_interface<I>::type>*)&impl_vtable };
+            return { (produce<D, typename default_interface<I>::type>*)&this->impl_vtable };
         }
     };
 
@@ -754,7 +754,7 @@ namespace winrt::impl
 
             if (result == error_no_interface && this->m_inner)
             {
-                result = this->m_inner.as(id, object);
+                result = static_cast<unknown_abi*>(get_abi(this->m_inner))->QueryInterface(id, object);
             }
 
             return result;
@@ -916,7 +916,7 @@ namespace winrt::impl
 
             if (result == error_no_interface && this->m_inner)
             {
-                result = this->m_inner.as(id, object);
+                result = static_cast<unknown_abi*>(get_abi(this->m_inner))->QueryInterface(id, object);
             }
 
             return result;
