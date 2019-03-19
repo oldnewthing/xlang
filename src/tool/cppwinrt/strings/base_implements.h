@@ -51,7 +51,7 @@ namespace winrt::impl
 #else
 
     template <typename T>
-    struct is_interface : std::disjunction<std::is_base_of<Windows::Foundation::IInspectable, T>> {};
+    struct is_interface : std::is_base_of<Windows::Foundation::IInspectable, T> {};
 
 #endif
 
@@ -114,7 +114,7 @@ namespace winrt::impl
     {
         operator producer_ref<I> const() const noexcept
         {
-            return { (produce<D, typename default_interface<I>::type>*)this };
+            return { (produce<D, typename default_interface<I>::type>*)&impl_vtable };
         }
     };
 
@@ -421,8 +421,8 @@ namespace winrt::impl
     template <typename D, typename I, typename Enable>
     struct producer
     {
-    private:
-        produce<D, I> vtable;
+    protected:
+        produce<D, I> impl_vtable;
     };
 
     template <typename D, typename I, typename Enable>
@@ -704,6 +704,7 @@ namespace winrt::impl
         {
             return m_inner.operator bool();
         }
+
     protected:
         static constexpr bool is_composing = true;
         Windows::Foundation::IInspectable m_inner;
@@ -753,7 +754,7 @@ namespace winrt::impl
 
             if (result == error_no_interface && this->m_inner)
             {
-                result = static_cast<unknown_abi*>(get_abi(this->m_inner))->QueryInterface(id, object);
+                result = this->m_inner.as(id, object);
             }
 
             return result;
@@ -915,7 +916,7 @@ namespace winrt::impl
 
             if (result == error_no_interface && this->m_inner)
             {
-                result = static_cast<unknown_abi*>(get_abi(this->m_inner))->QueryInterface(id, object);
+                result = this->m_inner.as(id, object);
             }
 
             return result;
@@ -929,7 +930,7 @@ namespace winrt::impl
             {
                 if (local_count > 0)
                 {
-                    const com_array<guid>& inner_iids = get_interfaces(root_implements_type::m_inner);
+                    const com_array<guid> inner_iids = get_interfaces(root_implements_type::m_inner);
                     *count = local_count + inner_iids.size();
                     *array = static_cast<guid*>(WINRT_CoTaskMemAlloc(sizeof(guid)*(*count)));
                     if (*array == nullptr)
