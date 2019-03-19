@@ -327,6 +327,7 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="activation.cpp" />
     <ClCompile Include="Generated Files\module.g.cpp" />
     <ClCompile Include="Nested.HierarchyC.cpp" />
     <ClCompile Include="Nested.HierarchyD.cpp" />

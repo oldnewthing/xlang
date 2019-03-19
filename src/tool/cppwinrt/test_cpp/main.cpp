@@ -37,7 +37,15 @@ int32_t WINRT_CALL WINRT_RoGetActivationFactory(void* classId, guid const& iid, 
     std::wstring_view name{ WINRT_WindowsGetStringRawBuffer(classId, nullptr) };
     HMODULE library{ nullptr };
 
-    if (starts_with(name, L"test_component."))
+    if (starts_with(name, L"test_component_base."))
+    {
+        library = LoadLibraryW(L"test_component_base.dll");
+    }
+    else if (starts_with(name, L"test_component_derived."))
+    {
+        library = LoadLibraryW(L"test_component_derived.dll");
+    }
+    else if (starts_with(name, L"test_component."))
     {
         library = LoadLibraryW(L"test_component.dll");
     }
