@@ -811,11 +811,6 @@ namespace winrt::impl
         void abi_enter() const noexcept {}
         void abi_exit() const noexcept {}
 
-#if defined(_DEBUG) && !defined(WINRT_NO_MAKE_DETECTION)
-        // Please use winrt::make<T>(args...) to avoid allocating a C++/WinRT implementation type on the stack.
-        virtual void use_make_function_to_create_this_object() = 0;
-#endif
-
     protected:
 
         virtual int32_t query_interface_tearoff(guid const&, void**) const noexcept
@@ -1067,7 +1062,7 @@ namespace winrt::impl
 
         int32_t query_interface(guid const& id, void** object) noexcept
         {
-            *object = static_cast<D*>(this)->find_interface(id);
+            *object = static_cast<D*>(this)->use_make_function_to_create_this_object_find_interface(id);
 
             if (*object != nullptr)
             {
@@ -1180,7 +1175,8 @@ namespace winrt::impl
         virtual unknown_abi* get_unknown() const noexcept = 0;
         virtual std::pair<uint32_t, const guid*> get_local_iids() const noexcept = 0;
         virtual hstring GetRuntimeClassName() const = 0;
-        virtual void* find_interface(guid const&) const noexcept = 0;
+        // Please use winrt::make<T>(args...) to avoid allocating a C++/WinRT implementation type on the stack.
+        virtual void* use_make_function_to_create_this_object_find_interface(guid const&) const noexcept = 0;
         virtual inspectable_abi* find_inspectable() const noexcept = 0;
 
         virtual Windows::Foundation::TrustLevel GetTrustLevel() const noexcept
@@ -1204,11 +1200,10 @@ namespace winrt::impl
     {
         using T::T;
 
-#if defined(_DEBUG)
-        void use_make_function_to_create_this_object() final
+        virtual void* use_make_function_to_create_this_object_find_interface(guid const& id) const noexcept override
         {
+            return T::find_interface_impl(id);
         }
-#endif
     };
 #endif
 
@@ -1372,10 +1367,17 @@ namespace winrt
             return root_implements_type::Release();
         }
 
-        void* find_interface(guid const& id) const noexcept override
+        void* find_interface_impl(guid const& id) const noexcept
         {
             return impl::find_iid(static_cast<const D*>(this), id);
         }
+
+#if !defined(WINRT_NO_MAKE_DETECTION)
+        virtual void* use_make_function_to_create_this_object_find_interface(guid const& id) const noexcept override
+        {
+            return find_interface_impl(id);
+        }
+#endif
 
         impl::inspectable_abi* find_inspectable() const noexcept override
         {

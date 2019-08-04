@@ -42,9 +42,10 @@ namespace winrt::impl
             return m_values;
         }
 
-#if defined(_DEBUG) && !defined(WINRT_NO_MAKE_DETECTION)
-        void use_make_function_to_create_this_object() final
+#if !defined(WINRT_NO_MAKE_DETECTION)
+        void* use_make_function_to_create_this_object_find_interface(guid const& id) final
         {
+            return find_interface_impl(id);
         }
 #endif
 
